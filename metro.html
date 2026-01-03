@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<!-- saved from url=(0032)http://127.0.0.1:5500/metro.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>Peshawar Metro Route Planner (Dijkstra)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #065f46;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+    select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    button {
+      background: #065f46;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #047857;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #d1fae5;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🚇 Peshawar Metro Route Planner</h1>
+  <p>Shortest Path using Dijkstra Algorithm</p>
+</header>
+
+<div class="container">
+  <label for="start">Start Station</label>
+  <select id="start">
+    <option value="">Select Station</option>
+    <option value="Hayatabad">Hayatabad</option>
+    <option value="University">University</option>
+    <option value="Saddar">Saddar</option>
+    <option value="Hashtnagri">Hashtnagri</option>
+    <option value="Babusar">Babusar</option>
+  </select>
+
+  <label for="end">Destination Station</label>
+  <select id="end">
+    <option value="">Select Station</option>
+    <option value="Hayatabad">Hayatabad</option>
+    <option value="University">University</option>
+    <option value="Saddar">Saddar</option>
+    <option value="Hashtnagri">Hashtnagri</option>
+    <option value="Babusar">Babusar</option>
+  </select>
+
+  <button onclick="findShortestRoute()">Find Shortest Route</button>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+  // Graph representation (distance in minutes)
+  const graph = {
+    Hayatabad: { University: 10, Saddar: 25 },
+    University: { Hayatabad: 10, Saddar: 15, Hashtnagri: 20 },
+    Saddar: { Hayatabad: 25, University: 15, Hashtnagri: 10 },
+    Hashtnagri: { University: 20, Saddar: 10, Babusar: 15 },
+    Babusar: { Hashtnagri: 15 }
+  };
+
+  function dijkstra(start, end) {
+    const distances = {};
+    const previous = {};
+    const unvisited = new Set(Object.keys(graph));
+
+    for (let node of unvisited) {
+      distances[node] = Infinity;
+    }
+    distances[start] = 0;
+
+    while (unvisited.size > 0) {
+      let current = null;
+      for (let node of unvisited) {
+        if (current === null || distances[node] < distances[current]) {
+          current = node;
+        }
+      }
+
+      if (current === end) break;
+      unvisited.delete(current);
+
+      for (let neighbor in graph[current]) {
+        let newDist = distances[current] + graph[current][neighbor];
+        if (newDist < distances[neighbor]) {
+          distances[neighbor] = newDist;
+          previous[neighbor] = current;
+        }
+      }
+    }
+
+    const path = [];
+    let curr = end;
+    while (curr) {
+      path.unshift(curr);
+      curr = previous[curr];
+    }
+
+    return { path, distance: distances[end] };
+  }
+
+  function findShortestRoute() {
+    const start = document.getElementById('start').value;
+    const end = document.getElementById('end').value;
+    const resultDiv = document.getElementById('result');
+
+    if (!start || !end) {
+      alert('Please select both stations');
+      return;
+    }
+
+    if (start === end) {
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = 'You are already at the destination.';
+      return;
+    }
+
+    const result = dijkstra(start, end);
+
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `<strong>Shortest Route:</strong><br>${result.path.join(' → ')}<br><br><strong>Total Time:</strong> ${result.distance} minutes`;
+  }
+</script>
+
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+
+</body></html>
